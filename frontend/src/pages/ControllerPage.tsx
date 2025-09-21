@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, ButtonGroup, Button } from 'react-bootstrap';
 import { Chart as ChartJS, ChartData, ChartOptions, Filler, Legend, LineElement, LinearScale, PointElement, TimeScale, Title, Tooltip } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-// --- ADDITION: Import the context hook ---
 import { useController } from '../contexts/ControllerContext';
 
 // --- Mock Data Service (Preserved as requested) ---
@@ -417,7 +416,7 @@ const ControllerPage: React.FC = () => {
 
     return (
         <div className="controller-container">
-            <div className="controller-header">
+            <div className="controller-header mt-4">
                 <h1 className="page-title">Process Controller</h1>
                 <p className="page-subtitle">Real-time monitoring and process control systems</p>
             </div>

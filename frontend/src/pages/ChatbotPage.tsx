@@ -106,9 +106,9 @@ const ChatbotPage: React.FC = () => {
   return (
     <div className="chatbot-container">
       {/* Page Header */}
-      <div className="chatbot-header">
+      <div className="chatbot-header mt-4">
         <div className="header-content">
-          <h1 className="page-title">AI Assistant</h1>
+          <h1 className="page-title">PLantGPT</h1>
           <p className="page-subtitle">Intelligent co-pilot for plant optimization and analysis</p>
         </div>
         
@@ -130,7 +130,7 @@ const ChatbotPage: React.FC = () => {
               <div className="avatar-glow"></div>
             </div>
             <div className="ai-details">
-              <h5 className="ai-name">Plant AI Assistant</h5>
+              <h5 className="ai-name">PlantGPT</h5>
               <div className="ai-status-text">
                 <div className="pulse-dot"></div>
                 <span>Active & Learning</span>

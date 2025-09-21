@@ -1,3 +1,4 @@
+// src/pages/HomePage.tsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, ButtonGroup, Alert } from 'react-bootstrap';
 import {
@@ -17,19 +18,25 @@ import {
 import KPICard from '../components/KPICard';
 import { subscribeToLiveData } from '../services/websocket';
 import { useAuth } from '../contexts/AuthContext';
+import { useController } from '../contexts/ControllerContext'; // Import the context
 
 const HomePage: React.FC = () => {
-  const [plantStatus, setPlantStatus] = useState<'Running' | 'Stopped' | 'Maintenance'>('Running');
-  const [isLive, setIsLive] = useState(true);
+  const { state: controllerState, dispatch } = useController(); // Use the context
+  const { plantStatus } = controllerState; // Get plantStatus from context
+  const [isLive, setIsLive] = useState(plantStatus === 'Running');
   const [emergencyMessage, setEmergencyMessage] = useState<string | null>(null);
   const { currentUser } = useAuth();
-  // Find this state in HomePage.tsx
+  
   const [kpiData, setKpiData] = useState({
-    spc: { value: 0, target: 875.0 }, // Remove status and color
+    spc: { value: 0, target: 875.0 },
     tsr: { value: 0, target: 28.0 },
     clinkerQuality: { value: 0, target: 45.0 },
     co2Emissions: { value: 0, target: 15.0 },
   });
+
+  useEffect(() => {
+    setIsLive(plantStatus === 'Running');
+  }, [plantStatus]);
 
   useEffect(() => {
     if (isLive) {
@@ -49,19 +56,16 @@ const HomePage: React.FC = () => {
   }, [isLive]);
 
   const handleRun = () => {
-    setIsLive(true);
-    setPlantStatus('Running');
+    dispatch({ type: 'SET_PLANT_STATUS', payload: 'Running' });
     setEmergencyMessage(null);
   };
 
   const handleStop = () => {
-    setIsLive(false);
-    setPlantStatus('Stopped');
+    dispatch({ type: 'SET_PLANT_STATUS', payload: 'Stopped' });
   };
 
   const handleEmergency = () => {
-    setIsLive(false);
-    setPlantStatus('Stopped');
+    dispatch({ type: 'SET_PLANT_STATUS', payload: 'Stopped' });
     const message = 'Emergency Stop Activated! System updates are paused.';
     setEmergencyMessage(message);
     window.alert('EMERGENCY STOP ACTIVATED!');
@@ -117,10 +121,10 @@ const HomePage: React.FC = () => {
   return (
     <div className="dashboard-container">
       {/* Welcome Header */}
-      <div className="dashboard-header">
+      <div className="dashboard-header mt-4">
         <div className="welcome-section">
           <p className="welcome-subtitle">
-            Welcome back, <span className="user-name">{currentUser?.username || 'Operator'}</span>
+            Welcome back, <span className="user-name" style={{ fontSize: '24px' }}>{currentUser?.username || 'Operator'}</span>
           </p>
         </div>
       </div>
@@ -654,6 +658,18 @@ const HomePage: React.FC = () => {
           .control-buttons {
             flex-direction: column;
           }
+        }
+
+        .welcome-subtitle {
+          font-size: 20px;
+          color: var(--text-secondary);
+          margin: 0;
+        }
+
+        .user-name {
+          color: var(--text-primary); /* Change color */
+          font-weight: 1000; /* Make bold */
+          font-size: 4000px; /* Match font size */
         }
       `}</style>
     </div>

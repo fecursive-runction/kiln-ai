@@ -79,7 +79,7 @@ const OptimizerPage: React.FC = () => {
   return (
     <div className="optimizer-container">
       {/* Page Header */}
-      <div className="optimizer-header">
+      <div className="optimizer-header mt-4">
         <div className="header-content">
           <h1 className="page-title">Process Optimizer</h1>
           <p className="page-subtitle">

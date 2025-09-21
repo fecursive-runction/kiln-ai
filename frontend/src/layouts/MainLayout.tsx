@@ -36,7 +36,7 @@ const MainLayout: React.FC = () => {
   const { state } = useController(); // Get state from ControllerContext
   const { plantStatus } = state;    // Get plantStatus from the context's state
   
-  const { currentUser, logout } = useAuth(); // Get auth info from AuthContext
+  const { currentUser, logOut } = useAuth(); // Get auth info from AuthContext
   const navigate = useNavigate();           // Get navigate function from router
   // --- END OF CORRECTION ---
 
@@ -77,7 +77,7 @@ const MainLayout: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logOut();
       navigate('/login');
     } catch {
       console.error("Failed to log out");

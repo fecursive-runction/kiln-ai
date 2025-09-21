@@ -1,6 +1,6 @@
 // This is the full and final content for frontend/src/services/websocket.ts
-
-const WS_URL = 'ws://127.0.0.1:8000/ws/live_data';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const WS_URL = API_URL.replace(/^http/, 'ws') + '/api/v1/ws';
 let socket: WebSocket | null = null;
 const listeners: ((data: any) => void)[] = [];
 

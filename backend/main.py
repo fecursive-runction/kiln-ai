@@ -1,29 +1,31 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-# --- Corrected Imports ---
-# We now import both 'api' and 'streaming' from the 'app' folder
-from app import api, streaming,reports,chatbot, optimizer
+from app import api, streaming, reports, chatbot, optimizer
 
 app = FastAPI()
 
-origins = ["*"]
+# This is the crucial part for allowing your frontend to connect
+origins = [
+    "http://localhost:5173", # For local development
+    # The URL of your deployed frontend will be added by Render/Vercel automatically
+    # Or you can add it manually if needed, e.g., "https://kiln-ai-frontend.onrender.com"
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], # Allows all origins for simplicity, can be restricted to origins list
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# We include both routers, which are now correctly defined
-app.include_router(api.router)
-app.include_router(streaming.router) 
-app.include_router(reports.router)
-app.include_router(chatbot.router)
-app.include_router(optimizer.router)
+# Include all your API routers
+app.include_router(api.router, prefix="/api")
+app.include_router(streaming.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
+app.include_router(chatbot.router, prefix="/api")
+app.include_router(optimizer.router, prefix="/api")
 
-@app.get("/")
+@app.get("/api")
 def read_root():
-    return {"message": "Welcome to the Cement-AI Backend!"}
+    return {"message": "Welcome to the Cement-AI Backend!"}

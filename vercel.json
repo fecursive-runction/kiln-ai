@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/vite.config.js",
-      "use": "@vercel/vite-react",
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
       "config": {
-        "project": "frontend/package.json"
+        "distDir": "dist"
       }
     },
     {
@@ -20,7 +20,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/index.html"
-    }
-  ]
+      "destination": "/frontend/dist/index.html"
+    }
+  ]
 }

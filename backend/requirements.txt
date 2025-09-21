@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-pandas
-google-generativeai
-python-dotenv
-fpdf
-websockets
-aiohttp

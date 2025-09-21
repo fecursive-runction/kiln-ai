@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://kiln-ai-backend.onrender.com/api', // Ensure this matches your backend port
+    baseURL: '/api', // Ensure this matches your backend port
     headers: {
         'Content-Type': 'application/json',
     },

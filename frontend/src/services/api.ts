@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: '/api', // Ensure this matches your backend port
+    baseURL: '/api/v1', // Ensure this matches your backend port
     headers: {
         'Content-Type': 'application/json',
     },

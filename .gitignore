@@ -9,9 +9,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -275,3 +273,4 @@ public/build/
 # OS-generated files
 .DS_Store
 Thumbs.db
+.vercel

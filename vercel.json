@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
+      "src": "frontend/vite.config.js",
+      "use": "@vercel/vite-react",
       "config": {
-        "distDir": "dist"
+        "project": "frontend/package.json"
       }
     },
     {
@@ -13,14 +13,14 @@
       "use": "@vercel/python"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/backend/main.py"
+      "source": "/api/(.*)",
+      "destination": "/backend/main.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/index.html"
-    }
-  ]
+      "source": "/(.*)",
+      "destination": "/frontend/index.html"
+    }
+  ]
 }

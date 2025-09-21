@@ -16,44 +16,29 @@ import {
   CloudRain
 } from 'react-bootstrap-icons';
 import KPICard from '../components/KPICard';
-import { subscribeToLiveData } from '../services/websocket';
 import { useAuth } from '../contexts/AuthContext';
-import { useController } from '../contexts/ControllerContext'; // Import the context
+import { useController } from '../contexts/ControllerContext';
 
 const HomePage: React.FC = () => {
-  const { state: controllerState, dispatch } = useController(); // Use the context
-  const { plantStatus } = controllerState; // Get plantStatus from context
-  const [isLive, setIsLive] = useState(plantStatus === 'Running');
+  const { state: controllerState, dispatch } = useController();
+  const { plantStatus, spcHistory, tsrHistory, clinkerQualityHistory, co2History } = controllerState;
+  const isLive = plantStatus === 'Running';
   const [emergencyMessage, setEmergencyMessage] = useState<string | null>(null);
   const { currentUser } = useAuth();
+
+  const getLastValue = (dataArray: any[], fallback = 0) => {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) return fallback;
+    const lastItem = dataArray[dataArray.length - 1];
+    return (typeof lastItem?.y === 'number' && !isNaN(lastItem.y)) ? lastItem.y : fallback;
+  };
   
-  const [kpiData, setKpiData] = useState({
-    spc: { value: 0, target: 875.0 },
-    tsr: { value: 0, target: 28.0 },
-    clinkerQuality: { value: 0, target: 45.0 },
-    co2Emissions: { value: 0, target: 15.0 },
-  });
-
-  useEffect(() => {
-    setIsLive(plantStatus === 'Running');
-  }, [plantStatus]);
-
-  useEffect(() => {
-    if (isLive) {
-      const unsubscribe = subscribeToLiveData((payload) => {
-        if (payload && payload.kpi_data) {
-          const liveData = payload.kpi_data;
-          setKpiData(prevData => ({
-            spc: { ...prevData.spc, value: liveData.spc || 0 },
-            tsr: { ...prevData.tsr, value: liveData.tsr || 0 },
-            clinkerQuality: { ...prevData.clinkerQuality, value: liveData.clinker_quality || 0 },
-            co2Emissions: { ...prevData.co2Emissions, value: liveData.co2 || 0 },
-          }));
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, [isLive]);
+  // KPI data is now derived directly from the context state
+  const kpiData = {
+    spc: { value: getLastValue(spcHistory, 875.0), target: 875.0 },
+    tsr: { value: getLastValue(tsrHistory, 28.0), target: 28.0 },
+    clinkerQuality: { value: getLastValue(clinkerQualityHistory, 45.0), target: 45.0 },
+    co2Emissions: { value: getLastValue(co2History, 15.0), target: 15.0 },
+  };
 
   const handleRun = () => {
     dispatch({ type: 'SET_PLANT_STATUS', payload: 'Running' });
@@ -206,9 +191,8 @@ const HomePage: React.FC = () => {
                 title="Specific Power Consumption"
                 data={kpiData.spc}
                 unit="kWh/t"
-                // Add these required props 👇
                 icon={<ShieldFill size={24} />}
-                higherIsBetter={false} // Lower is better for consumption
+                higherIsBetter={false}
               />
             </div>
           </Col>
@@ -218,20 +202,7 @@ const HomePage: React.FC = () => {
                 title="Thermal Substitution Rate"
                 data={kpiData.tsr}
                 unit="%"
-                // Add these required props 👇
                 icon={<Thermometer size={24} />}
-                higherIsBetter={true} // Higher is better for this rate
-              />
-            </div>
-          </Col>
-          <Col xl={3} lg={6} md={6} sm={12} className="mb-3">
-            <div className="kpi-wrapper">
-              <KPICard
-                title="Clinker Quality Index"
-                data={kpiData.clinkerQuality}
-                unit="%"
-                // Add these required props 👇
-                icon={<ShieldFill size={24} />}
                 higherIsBetter={true}
               />
             </div>
@@ -242,9 +213,19 @@ const HomePage: React.FC = () => {
                 title="Clinker Quality Index"
                 data={kpiData.clinkerQuality}
                 unit="%"
-                // Add these required props 👇
                 icon={<ShieldFill size={24} />}
-                higherIsBetter={true} // Higher is better for quality
+                higherIsBetter={true}
+              />
+            </div>
+          </Col>
+          <Col xl={3} lg={6} md={6} sm={12} className="mb-3">
+            <div className="kpi-wrapper">
+              <KPICard
+                title="CO₂ Emissions"
+                data={kpiData.co2Emissions}
+                unit="t/t clinker"
+                icon={<CloudRain size={24} />}
+                higherIsBetter={false}
               />
             </div>
           </Col>

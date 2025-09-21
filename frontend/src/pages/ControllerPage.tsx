@@ -1,85 +1,14 @@
 // src/pages/ControllerPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'; // Removed useEffect
 import { Row, Col, ButtonGroup, Button } from 'react-bootstrap';
 import { Chart as ChartJS, ChartData, ChartOptions, Filler, Legend, LineElement, LinearScale, PointElement, TimeScale, Title, Tooltip } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useController } from '../contexts/ControllerContext';
 
-// --- Mock Data Service (Preserved as requested) ---
-const createMockTimeSeriesData = (count = 30) => {
-    const now = Date.now();
-    const data = [];
-    for (let i = 0; i < count; i++) {
-        data.push({
-            x: now - (count - i) * 20000,
-            y: Math.random() * 30 + 40 + Math.sin(i * 0.2) * 15
-        });
-    }
-    return data;
-};
-
-const historyData = {
-    logs: [
-        { id: new Date().toISOString(), level: 'Info' as const, message: 'System initialized successfully' },
-        { id: new Date(Date.now() - 60000).toISOString(), level: 'Warning' as const, message: 'Temperature threshold exceeded' }
-    ],
-    spc: createMockTimeSeriesData(),
-    tsr: createMockTimeSeriesData(),
-    clinker_quality: createMockTimeSeriesData(),
-    co2: createMockTimeSeriesData()
-};
-
-const getHistory = () => {
-    return historyData;
-};
-
-const subscribeToLiveData = (callback: (payload: any) => void) => {
-    const interval = setInterval(() => {
-        const newSpc = Math.random() * 30 + 40 + Math.sin(Date.now() * 0.001) * 15;
-        const newTsr = Math.random() * 20 + 50 + Math.cos(Date.now() * 0.001) * 10;
-        const newClinker = Math.random() * 10 + 85;
-        const newCo2 = Math.random() * 5 + 10;
-
-        historyData.spc.push({ x: Date.now(), y: newSpc });
-        if (historyData.spc.length > 30) historyData.spc.shift();
-        
-        historyData.tsr.push({ x: Date.now(), y: newTsr });
-        if (historyData.tsr.length > 30) historyData.tsr.shift();
-
-        historyData.clinker_quality.push({ x: Date.now(), y: newClinker });
-        if (historyData.clinker_quality.length > 30) historyData.clinker_quality.shift();
-
-        historyData.co2.push({ x: Date.now(), y: newCo2 });
-        if (historyData.co2.length > 30) historyData.co2.shift();
-
-        // --- ADDITION: Simulate a log entry with the live data ---
-        let log_entry = null;
-        if (newSpc > 85) {
-            log_entry = { id: new Date().toISOString(), level: 'Alert', message: `Critical SPC: ${newSpc.toFixed(1)} kWh/t!` };
-        } else if (newSpc > 70) {
-            log_entry = { id: new Date().toISOString(), level: 'Warning', message: `High SPC: ${newSpc.toFixed(1)} kWh/t.` };
-        }
-
-        callback({
-            kpi_data: {
-                spc: newSpc,
-                tsr: newTsr,
-                clinker_quality: newClinker,
-                co2: newCo2,
-            },
-            log_entry: log_entry // Pass the generated log entry
-        });
-    }, 2000);
-
-    return () => clearInterval(interval);
-};
-// --- End Mock Data Service ---
-
-
-// --- Icon Components (Preserved as requested) ---
+// --- Icon Components (No Changes) ---
 const ExclamationTriangle = ({ size = 16 }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.a905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
     </svg>
 );
 const Info = ({ size = 16 }) => (
@@ -128,15 +57,10 @@ interface KpiInfo {
     color: string;
 }
 
-const createChartData = (initialData: any[], color: string): ChartData<'line'> => {
-    const validData = Array.isArray(initialData) ? initialData.filter(item => 
-        item && typeof item.x === 'number' && typeof item.y === 'number' && 
-        !isNaN(item.x) && !isNaN(item.y)
-    ) : [];
-
+const createChartData = (color: string): ChartData<'line'> => {
     return {
         datasets: [{ 
-            data: [], // Start with an empty chart to "load from the left"
+            data: [],
             borderColor: color, 
             fill: false,
             pointRadius: 2,
@@ -155,27 +79,12 @@ const chartColors = {
 };
 
 const ControllerPage: React.FC = () => {
-    // --- ADDITION: Use the global state and dispatch from the context ---
-    const { state: controllerState, dispatch } = useController();
-
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const getInitialHistory = () => {
-        try {
-            return getHistory();
-        } catch (err) {
-            console.error('Error getting initial history:', err);
-            return { logs: [], spc: [], tsr: [], clinker_quality: [], co2: [] };
-        }
-    };
-
-    const initialHistory = getInitialHistory();
-    
-    // This local state is preserved as per the rule, but the view will now use the global state.
-    const [controllerLogs, setControllerLogs] = useState<LogEntry[]>(initialHistory.logs);
+    // State is now entirely from the global context
+    const { state: controllerState } = useController();
     const [logFilter, setLogFilter] = useState<'All' | 'Alert' | 'Warning' | 'Info'>('All');
     
+    // REMOVED the useEffect for subscription. The Context now handles it.
+
     const getLastValue = (dataArray: any[]) => {
         if (!Array.isArray(dataArray) || dataArray.length === 0) return 0;
         const lastItem = dataArray[dataArray.length - 1];
@@ -184,112 +93,13 @@ const ControllerPage: React.FC = () => {
         }
         return 0;
     };
-    
-    // This local state is also preserved.
-    const [kpiData, setKpiData] = useState({
-        spc: getLastValue(initialHistory.spc),
-        tsr: getLastValue(initialHistory.tsr),
-        clinkerQuality: getLastValue(initialHistory.clinker_quality),
-        co2Emissions: getLastValue(initialHistory.co2),
-    });
 
-    // These local chart data states are preserved.
-    const [spcData, setSpcData] = useState(createChartData(initialHistory.spc, chartColors.primary));
-    const [tsrData, setTsrData] = useState(createChartData(initialHistory.tsr, chartColors.error));
-    const [clinkerData, setClinkerData] = useState(createChartData(initialHistory.clinker_quality, chartColors.secondary));
-    const [co2Data, setCo2Data] = useState(createChartData(initialHistory.co2, chartColors.warning));
-
-    useEffect(() => {
-        let unsubscribe: (() => void) | null = null;
-        
-        try {
-            unsubscribe = subscribeToLiveData((payload) => {
-                if (!payload) return;
-                
-                // --- ADDITION: Dispatch live data to the global context ---
-                if (payload.kpi_data) {
-                    dispatch({
-                        type: 'ADD_KPI_DATA',
-                        payload: { ...payload.kpi_data, timestamp: Date.now() }
-                    });
-                }
-                if (payload.log_entry) {
-                    dispatch({ type: 'ADD_LOG', payload: payload.log_entry });
-                }
-                // --- End of Addition ---
-                
-                // The original state updates are preserved below
-                if (!payload.kpi_data) return;
-                
-                try {
-                    const validatedKpiData = {
-                        spc: typeof payload.kpi_data.spc === 'number' ? payload.kpi_data.spc : kpiData.spc,
-                        tsr: typeof payload.kpi_data.tsr === 'number' ? payload.kpi_data.tsr : kpiData.tsr,
-                        clinkerQuality: typeof payload.kpi_data.clinker_quality === 'number' ? payload.kpi_data.clinker_quality : kpiData.clinkerQuality,
-                        co2Emissions: typeof payload.kpi_data.co2 === 'number' ? payload.kpi_data.co2 : kpiData.co2Emissions,
-                    };
-                    setKpiData(validatedKpiData);
-
-                    const timestamp = Date.now();
-                    
-                    const updateChart = (setter: React.Dispatch<React.SetStateAction<ChartData<'line'>>>, y: number) => {
-                        setter(prevData => {
-                            const newData = [...prevData.datasets[0].data];
-                            newData.push({ x: timestamp, y });
-                            if (newData.length > 30) newData.shift();
-                            return { datasets: [{ ...prevData.datasets[0], data: newData }] };
-                        });
-                    };
-
-                    updateChart(setSpcData, validatedKpiData.spc);
-                    updateChart(setTsrData, validatedKpiData.tsr);
-                    updateChart(setClinkerData, validatedKpiData.clinkerQuality);
-                    updateChart(setCo2Data, validatedKpiData.co2Emissions);
-
-                } catch (err) {
-                    console.error('Error processing live data payload:', err);
-                }
-            });
-            
-            setIsLoading(false);
-            
-        } catch (err) {
-            console.error('Error setting up live data subscription:', err);
-            setError(`Live data setup error: ${err}`);
-            setIsLoading(false);
-        }
-
-        return () => {
-            if (unsubscribe) {
-                try {
-                    unsubscribe();
-                } catch (err) {
-                    console.error('Error during live data cleanup:', err);
-                }
-            }
-        };
-    }, [dispatch]); // ADDITION: Added dispatch to dependency array
-
-    if (error) {
-        return (
-            <div className="controller-container">
-                <div className="error-state" style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#ff475740', border: '1px solid #ff4757', borderRadius: '8px', margin: '2rem' }}>
-                    <h3 style={{ color: '#ff4757' }}>Controller Error</h3>
-                    <p>{error}</p>
-                    <button onClick={() => window.location.reload()} style={{ background: '#ff4757', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
-                        Reload Page
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (isLoading && controllerState.spcHistory.length === 0) { // MODIFICATION: Check context state for initial load
+    if (controllerState.spcHistory.length === 0) {
         return (
             <div className="controller-container">
                 <div className="loading-state" style={{ padding: '2rem', textAlign: 'center', margin: '2rem' }}>
                     <h3>Loading Controller...</h3>
-                    <p>Initializing process monitoring systems...</p>
+                    <p>Initializing process monitoring systems and waiting for data...</p>
                 </div>
             </div>
         );
@@ -299,13 +109,12 @@ const ControllerPage: React.FC = () => {
         return Number(value || 0).toFixed(decimals);
     };
 
-    // --- ADDITION: Create new chart data objects from the global state ---
-    const globalSpcData = { datasets: [{ ...createChartData([], chartColors.primary).datasets[0], data: controllerState.spcHistory }] };
-    const globalTsrData = { datasets: [{ ...createChartData([], chartColors.error).datasets[0], data: controllerState.tsrHistory }] };
-    const globalClinkerData = { datasets: [{ ...createChartData([], chartColors.secondary).datasets[0], data: controllerState.clinkerQualityHistory }] };
-    const globalCo2Data = { datasets: [{ ...createChartData([], chartColors.warning).datasets[0], data: controllerState.co2History }] };
+    // Data for charts and KPIs is read directly from the global state
+    const globalSpcData = { datasets: [{ ...createChartData(chartColors.primary).datasets[0], data: controllerState.spcHistory }] };
+    const globalTsrData = { datasets: [{ ...createChartData(chartColors.error).datasets[0], data: controllerState.tsrHistory }] };
+    const globalClinkerData = { datasets: [{ ...createChartData(chartColors.secondary).datasets[0], data: controllerState.clinkerQualityHistory }] };
+    const globalCo2Data = { datasets: [{ ...createChartData(chartColors.warning).datasets[0], data: controllerState.co2History }] };
 
-    // --- ADDITION: Get the latest KPI values from the global state ---
     const latestGlobalKpi = {
         spc: getLastValue(controllerState.spcHistory),
         tsr: getLastValue(controllerState.tsrHistory),
@@ -411,7 +220,6 @@ const ControllerPage: React.FC = () => {
         { data: globalCo2Data, title: 'CO₂ Emissions', unit: 't/t clinker', icon: <CloudRain />, color: chartColors.warning, description: 'Environmental impact' },
     ];
     
-    // --- MODIFICATION: Read logs from the global state ---
     const filteredLogs = controllerState.logs.filter(log => logFilter === 'All' || log.level === logFilter);
 
     return (

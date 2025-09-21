@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Tabs, Tab, Form, Button, InputGroup, Row, Col, Alert, Modal } from 'react-bootstrap';
 import { Eye, EyeSlash, Cpu, Gear, Google } from 'react-bootstrap-icons';
@@ -20,10 +20,21 @@ const LoginPage: React.FC = () => {
   const [signUpUsername, setSignUpUsername] = useState('');
   const [signUpRole, setSignUpRole] = useState<'Operator' | 'Manager'>('Operator');
 
+  // State for Caps Lock warning
+  const [isCapsOn, setIsCapsOn] = useState(false);
+
   // State for the Google Sign-Up flow
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [pendingGoogleUser, setPendingGoogleUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<'Operator' | 'Manager'>('Operator');
+
+  const handlePasswordKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.getModifierState('CapsLock')) {
+      setIsCapsOn(true);
+    } else {
+      setIsCapsOn(false);
+    }
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +52,13 @@ const LoginPage: React.FC = () => {
     setError('');
     try {
       await signUp(signUpEmail, signUpPassword, signUpUsername, signUpRole);
-      navigate('/');
+      alert('Sign up successful! Please log in to continue.');
+      setActiveTab('login');
+      // Clear signup form fields
+      setSignUpEmail('');
+      setSignUpPassword('');
+      setSignUpUsername('');
+      setSignUpRole('Operator');
     } catch {
       setError('Failed to create an account. The email may already be in use.');
     }
@@ -73,6 +90,9 @@ const LoginPage: React.FC = () => {
       setError('Failed to save role. Please try again.');
     }
   };
+  
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const passwordPlaceholder = isPasswordFocused ? "" : "Create a password (min. 6 characters)";
 
   return (
     <>
@@ -88,7 +108,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
         
-        <Container fluid className="login-content d-flex align-items-center justify-content-center vh-100">
+        <Container fluid className="login-content d-flex align-items-center justify-content-center">
           <div className="login-wrapper">
             {/* Branding Section */}
             <div className="login-header text-center mb-4">
@@ -99,7 +119,7 @@ const LoginPage: React.FC = () => {
                 </div>
                 <div className="brand-glow"></div>
               </div>
-              <h1 className="brand-title">Plant Control System</h1>
+              <h1 className="brand-title">kiln.AI</h1>
               <p className="brand-subtitle">Advanced Industrial Automation Platform</p>
             </div>
 
@@ -115,13 +135,16 @@ const LoginPage: React.FC = () => {
                   </Alert>
                 )}
                 
+                {isCapsOn && activeTab === 'login' && <Alert variant="warning" className="login-alert mb-0">Caps Lock is ON</Alert>}
+
                 <div className="login-tabs-container">
                   <Tabs 
                     activeKey={activeTab} 
                     onSelect={(k) => setActiveTab(k || 'login')} 
                     className="login-tabs"
+                    justify
                   >
-                    <Tab eventKey="login" title="Sign In">
+                    <Tab eventKey="login" title="Login">
                       <div className="tab-content-wrapper">
                         <Form onSubmit={handleLoginSubmit} className="login-form">
                           <div className="form-group">
@@ -145,6 +168,7 @@ const LoginPage: React.FC = () => {
                                 value={loginPassword}
                                 onChange={(e) => setLoginPassword(e.target.value)}
                                 className="form-control password-input"
+                                onKeyUp={handlePasswordKeyUp}
                                 required 
                               />
                               <Button 
@@ -158,7 +182,7 @@ const LoginPage: React.FC = () => {
                           </div>
                           
                           <Button type="submit" className="btn btn-primary btn-login">
-                            <span>Sign In</span>
+                            <span>Login</span>
                             <div className="btn-shine"></div>
                           </Button>
                         </Form>
@@ -210,10 +234,13 @@ const LoginPage: React.FC = () => {
                             <InputGroup className="password-group">
                               <Form.Control 
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="Create a password (min. 6 characters)"
+                                placeholder={passwordPlaceholder}
                                 value={signUpPassword}
                                 onChange={(e) => setSignUpPassword(e.target.value)}
                                 className="form-control password-input"
+                                onFocus={() => setIsPasswordFocused(true)}
+                                onBlur={() => setIsPasswordFocused(false)}
+                                onKeyUp={handlePasswordKeyUp}
                                 required 
                               />
                               <Button 
@@ -224,6 +251,7 @@ const LoginPage: React.FC = () => {
                                 {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
                               </Button>
                             </InputGroup>
+                            {isCapsOn && <Alert variant="warning" className="mt-2 p-1 text-center">Caps Lock is ON</Alert>}
                           </div>
                           
                           <div className="form-group">
@@ -366,35 +394,11 @@ const LoginPage: React.FC = () => {
           animation: float 8s ease-in-out infinite;
         }
 
-        .particle:nth-child(1) {
-          top: 20%;
-          left: 20%;
-          animation-delay: 0s;
-        }
-
-        .particle:nth-child(2) {
-          top: 60%;
-          left: 80%;
-          animation-delay: 2s;
-        }
-
-        .particle:nth-child(3) {
-          top: 80%;
-          left: 30%;
-          animation-delay: 4s;
-        }
-
-        .particle:nth-child(4) {
-          top: 30%;
-          left: 70%;
-          animation-delay: 6s;
-        }
-
-        .particle:nth-child(5) {
-          top: 70%;
-          left: 10%;
-          animation-delay: 1s;
-        }
+        .particle:nth-child(1) { top: 20%; left: 20%; animation-delay: 0s; }
+        .particle:nth-child(2) { top: 60%; left: 80%; animation-delay: 2s; }
+        .particle:nth-child(3) { top: 80%; left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { top: 30%; left: 70%; animation-delay: 6s; }
+        .particle:nth-child(5) { top: 70%; left: 10%; animation-delay: 1s; }
 
         @keyframes float {
           0%, 100% { transform: translateY(0px) scale(1); opacity: 0.6; }
@@ -404,6 +408,7 @@ const LoginPage: React.FC = () => {
         .login-content {
           position: relative;
           z-index: 1;
+          padding: 2rem 0;
         }
 
         .login-wrapper {
@@ -413,7 +418,7 @@ const LoginPage: React.FC = () => {
         }
 
         .login-header {
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem; /* Reduced space */
         }
 
         .brand-icon-container {
@@ -521,10 +526,6 @@ const LoginPage: React.FC = () => {
           padding: 0;
         }
 
-        .login-tabs {
-          border-bottom: 1px solid var(--border-primary);
-        }
-
         .login-tabs .nav-link {
           background: transparent;
           border: none;
@@ -532,8 +533,14 @@ const LoginPage: React.FC = () => {
           border-radius: 0;
           color: var(--text-secondary);
           font-weight: 500;
-          padding: 1rem 1.5rem;
+          padding: 0.8rem 1rem; /* Reduced padding */
           transition: all var(--transition-fast);
+        }
+        
+        /* This makes the tabs take up equal space */
+        .login-tabs .nav-item {
+            flex-grow: 1;
+            text-align: center;
         }
 
         .login-tabs .nav-link:hover {
@@ -548,15 +555,15 @@ const LoginPage: React.FC = () => {
         }
 
         .tab-content-wrapper {
-          padding: 2rem 1.5rem;
+          padding: 1.5rem; /* Reduced padding */
         }
 
         .login-form {
-          margin-bottom: 1.5rem;
+          margin-bottom: 1rem; /* Reduced space */
         }
 
         .form-group {
-          margin-bottom: 1.5rem;
+          margin-bottom: 1rem; /* Reduced space */
         }
 
         .form-label {
@@ -682,7 +689,7 @@ const LoginPage: React.FC = () => {
         .divider {
           display: flex;
           align-items: center;
-          margin: 1.5rem 0;
+          margin: 1rem 0; /* Reduced space */
           color: var(--text-tertiary);
           font-size: 12px;
           font-weight: 500;
@@ -812,3 +819,4 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
